@@ -27,4 +27,4 @@ def surface_roughness(a,N_type,N_space):
     aa.get_cfg_file_one('surface.cfg')
     return
 
-surface_roughness('example/dump.000001677.cfg',2,300)
+surface_roughness('example/dump.000001677.cfg',2,100)
