@@ -97,6 +97,6 @@ def surface_statistics(a,N_space):
     aa.get_cfg_file_one('sample.cfg')
     return
 
-N=20
-#surface_atoms_filter('example/dump.000001677.cfg',2,N)
+N=50
+surface_atoms_filter('example/dump.000001677.cfg',2,N)
 surface_statistics('surf.dat',N)
