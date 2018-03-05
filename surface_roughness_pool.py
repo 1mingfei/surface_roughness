@@ -52,7 +52,6 @@ def surface_atoms_filter(a,N_type,N_space):
     aa.tot_num=int(len(aa.data))
     aa.atom_type_num=[n_type[1]]
     aa.get_cfg_file_one('surface.cfg')
-    h_bar=np.mean(surface_atoms[:,3])
     return
 
 def surface_statistics(a):
@@ -67,10 +66,11 @@ def surface_statistics(a):
         for i in range(len(mylines)-3):
             for j in range(4):
                 data[i][j]=float(mylines[3+i].split()[j])
-    print data 
+    h_bar=np.mean(data[:,3])
+    w=np.std(data[:,3])
+    print "mean height:",h_bar*cell[2][2]
+    print "interface width w(std):",w*cell[2][2]
     return
 
-
-
-surface_atoms_filter('example/dump.000001677.cfg',2,20)
+#surface_atoms_filter('example/dump.000001677.cfg',2,20)
 surface_statistics('surf.dat')
