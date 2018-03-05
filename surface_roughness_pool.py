@@ -54,7 +54,7 @@ def surface_atoms_filter(a,N_type,N_space):
     aa.get_cfg_file_one('surface.cfg')
     return
 
-def surface_statistics(a):
+def surface_statistics(a,N_space):
     with open(a,'r') as fin:
         mylines=fin.readlines()
         cell=np.zeros((3,3))
@@ -70,7 +70,33 @@ def surface_statistics(a):
     w=np.std(data[:,3])
     print "mean height:",h_bar*cell[2][2]
     print "interface width w(std):",w*cell[2][2]
+    lowest_h=np.amin(data, axis=0)[3] 
+    for i in range(len(data)):
+        data[i][3]-=lowest_h
+        if data[i][3]<0.0 : data[i][3]+=1.0
+    samples=[]
+    for ii in range(N_space):
+        xmin=ii/float(N_space)
+        xmax=(ii+1)/float(N_space)
+        for jj in range(N_space):
+            ymin=jj/float(N_space)
+            ymax=(jj+1)/float(N_space)
+            flag1=0
+            for i in range(len(data)):
+                if (data[i][1]>xmin and data[i][1]<xmax and data[i][2] > ymin and data[i][2] < ymax):
+                    samples.append(np.asarray(data[i]))
+                    flag1=1
+                    break
+            if flag1==0: samples.append(np.array([1.07868200e+02,(xmin+xmax)/2.0,(ymin+ymax)/2.0,0.0]))
+    samples=np.asarray(samples)
+    print samples
+    aa=fx.info('surface.cfg','cfg',1)
+    aa.data=np.asarray(samples)
+    aa.tot_num=int(len(aa.data))
+    aa.atom_type_num=[aa.tot_num]
+    aa.get_cfg_file_one('sample.cfg')
     return
 
-#surface_atoms_filter('example/dump.000001677.cfg',2,20)
-surface_statistics('surf.dat')
+N=20
+#surface_atoms_filter('example/dump.000001677.cfg',2,N)
+surface_statistics('surf.dat',N)
