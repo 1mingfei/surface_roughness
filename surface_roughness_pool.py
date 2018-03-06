@@ -2,7 +2,9 @@
 import formatxfer as fx
 import numpy as np
 import multiprocessing
-from functools import partial
+from numpy import fft
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def get_surf_atoms(limits):
     aa=fx.info('example/dump.000001677.cfg','cfg',2)
@@ -75,6 +77,7 @@ def surface_statistics(a,N_space):
         data[i][3]-=lowest_h
         if data[i][3]<0.0 : data[i][3]+=1.0
     samples=[]
+    M=np.zeros((N_space,N_space))
     for ii in range(N_space):
         xmin=ii/float(N_space)
         xmax=(ii+1)/float(N_space)
@@ -85,18 +88,36 @@ def surface_statistics(a,N_space):
             for i in range(len(data)):
                 if (data[i][1]>xmin and data[i][1]<xmax and data[i][2] > ymin and data[i][2] < ymax):
                     samples.append(np.asarray(data[i]))
+                    M[ii][jj]=float(data[i][3])
                     flag1=1
                     break
-            if flag1==0: samples.append(np.array([1.07868200e+02,(xmin+xmax)/2.0,(ymin+ymax)/2.0,0.0]))
+            if flag1==0:
+                samples.append(np.array([1.07868200e+02,(xmin+xmax)/2.0,(ymin+ymax)/2.0,0.0]))
+                M[ii][jj]=0.0
     samples=np.asarray(samples)
-    print samples
-    aa=fx.info('surface.cfg','cfg',1)
-    aa.data=np.asarray(samples)
-    aa.tot_num=int(len(aa.data))
-    aa.atom_type_num=[aa.tot_num]
-    aa.get_cfg_file_one('sample.cfg')
+    M=np.asarray(M)
+    #----------generate cfg--------------
+    #aa=fx.info('surface.cfg','cfg',1)
+    #aa.data=np.asarray(samples)
+    #aa.tot_num=int(len(aa.data))
+    #aa.atom_type_num=[aa.tot_num]
+    #aa.get_cfg_file_one('sample.cfg')
+    #-----done generate cfg--------------
+    #Fk = fft.fft2(M)/N_space
+    Fk = fft.fft2(M)/N_space # Fourier coefficients (divided by n) nu = fft.fftfreq(n,dx) # Natural frequencies
+    Fk = fft.fftshift(Fk) # Shift zero freq to center
+    freqs = fft.fftfreq(N_space)
+    freqs = fft.fftshift(freqs)
+    #nu = fft.fftshift(nu) # Shift zero freq to center
+    psd2D = np.abs( Fk )**2
+    X, Y = np.meshgrid(freqs, freqs)
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.contour3D(X, Y, psd2D, 50, cmap='binary')
+    #ax.contour3D(freqs, freqs, psd2D, 50, cmap='binary')
+    fig.savefig('1.png')
     return
 
 N=50
-surface_atoms_filter('example/dump.000001677.cfg',2,N)
+#surface_atoms_filter('example/dump.000001677.cfg',2,N)
 surface_statistics('surf.dat',N)
