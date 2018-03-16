@@ -7,30 +7,15 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 def get_surf_atoms(cell,data,n_type,limits):
-    #aa=fx.info('example/dump.000001677.cfg','cfg',2)
-    #aa=fx.info(a,'cfg',tot_num)
-    #cell=aa.cell
-    #data=aa.data     
-    #n_type=aa.atom_type_num
     tot_num=int(len(data))
-    #surface_atoms=[]
     l2 = [data[i] for i in range(tot_num) if data[i][1] > limits[0] and  data[i][1] < limits[1] and  data[i][2] > limits[2] and  data[i][2] < limits[3] and  data[i][0]==1.07868200e+02 ]
     l2 = sorted(l2,key=lambda x:x[3],reverse=True)
     if len(l2)==0: pass
     else:
         return(l2[0])
 
-def get_surf_atoms_process(data,tot_num,limits):
-    surface_atoms=[]
-    l2 = [data[i] for i in range(tot_num) if data[i][1] > limits[0] and data[i][1] < limits[1] and data[i][2] > limits[2] and data[i][2] < limits[3] and data[i][0]==1.07868200e+02 ]
-    l2 = sorted(l2,key=lambda x:x[3],reverse=True)
-    if len(l2)==0: pass
-    else:
-        surface_atoms.append(l2[0])
-    return(np.asarray(surface_atoms))
-
 def surface_atoms_filter(a,N_type,N_space):
-    aa=fx.info(a,'cfg',2)
+    aa=fx.info(a,'cfg',N_type)
     cell=aa.cell
     data=aa.data     
     n_type=aa.atom_type_num
@@ -48,8 +33,8 @@ def surface_atoms_filter(a,N_type,N_space):
         for i in range(len(surface_atoms)):
             fout.write("%12.8f   %12.8f   %12.8f   %12.8f\n"%(surface_atoms[i][0],surface_atoms[i][1],surface_atoms[i][2],surface_atoms[i][3]))
 
-    print np.asarray(surface_atoms) 
-    print(len(surface_atoms))
+    #print np.asarray(surface_atoms) 
+    #print(len(surface_atoms))
     aa.data=np.asarray(surface_atoms)
     aa.tot_num=int(len(aa.data))
     aa.atom_type_num=[n_type[1]]
@@ -68,11 +53,17 @@ def surface_statistics(a,N_space):
         for i in range(len(mylines)-3):
             for j in range(4):
                 data[i][j]=float(mylines[3+i].split()[j])
-    h_bar=np.mean(data[:,3])
+
+    lowest_h=np.amin(data, axis=0)[3] 
+    h_bar=np.mean(data[:,3])-lowest_h
     w=np.std(data[:,3])
     print "mean height:",h_bar*cell[2][2]
-    print "interface width w(std):",w*cell[2][2]
-    lowest_h=np.amin(data, axis=0)[3] 
+    print "RMS ave of height devieation Rq(std):",w*cell[2][2]
+    tmp=np.zeros((len(data),1))
+    for i in range(len(data)):
+        tmp[i]=abs(data[i][3]-h_bar)
+        if tmp[i]<0.0 : tmp[i]+=1.0
+    print "Arithmetic average of the absolute values",np.mean(tmp)*cell[2][2]
     for i in range(len(data)):
         data[i][3]-=lowest_h
         if data[i][3]<0.0 : data[i][3]+=1.0
@@ -97,11 +88,11 @@ def surface_statistics(a,N_space):
     samples=np.asarray(samples)
     M=np.asarray(M)
     #----------generate cfg--------------
-    #aa=fx.info('surface.cfg','cfg',1)
-    #aa.data=np.asarray(samples)
-    #aa.tot_num=int(len(aa.data))
-    #aa.atom_type_num=[aa.tot_num]
-    #aa.get_cfg_file_one('sample.cfg')
+    aa=fx.info('surface.cfg','cfg',1)
+    aa.data=np.asarray(samples)
+    aa.tot_num=int(len(aa.data))
+    aa.atom_type_num=[aa.tot_num]
+    aa.get_cfg_file_one('sample.cfg')
     #-----done generate cfg--------------
     #Fk = fft.fft2(M)/N_space
     Fk = fft.fft2(M)/N_space # Fourier coefficients (divided by n) nu = fft.fftfreq(n,dx) # Natural frequencies
@@ -114,10 +105,11 @@ def surface_statistics(a,N_space):
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.contour3D(X, Y, psd2D, 50, cmap='binary')
-    #ax.contour3D(freqs, freqs, psd2D, 50, cmap='binary')
     fig.savefig('1.png')
     return
-
-N=50
-surface_atoms_filter('example/dump.000001677.cfg',2,N)
-surface_statistics('surf.dat',N)
+'''
+sampling the surface and statistics
+'''
+#N=50
+#surface_atoms_filter('example/dump.000001677.cfg',2,N)
+#surface_statistics('surf.dat',N)
