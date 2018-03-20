@@ -61,11 +61,31 @@ def rotation_M_ref_001(data):
          [ 0.70710678, 0.        ,-0.70710678],
          [-0.70710678, 0.        ,-0.70710678]]
         )
-    print ref
-    print data
+    print(ref)
+    print(data)
+    #data[0],data[1],data[2]=data[1],data[2],data[0]
+    #a=np.linalg.lstsq(ref[:3],data[:3])
+    a=np.linalg.lstsq(ref[:3],data[:3])
+    return a[0]
+
+def rotation_M_ref_111(data):
+    ref=np.asarray(
+        [[ 0.        , 0.70710678, 0.70710678],
+         [-0.80178373,-0.26726126, 0.53452247],
+         [ 0.80178373,-0.26726126, 0.53452247],
+         [ 0.70710678,-0.70710678, 0.        ],
+         [-1.        , 0.        , 0.        ],
+         [ 1.        , 0.        , 0.        ],
+         [ 0.70710678, 0.70710678, 0.        ],
+         [-0.70710678, 0.70710678, 0.        ],
+         [-0.70710678,-0.70710678, 0.        ],
+         [-0.80178373, 0.26726126,-0.53452247],
+         [ 0.80178373, 0.26726126,-0.53452247],
+         [ 0.        ,-0.70710678,-0.70710678]]
+        )
     a=np.linalg.lstsq(ref,data)
     return a[0]
-		
+
 def all_NNs(a,N_type,cutoff):
     aa=fx.info(a,'cfg',N_type)
     cell=aa.cell
@@ -82,8 +102,10 @@ def all_NNs(a,N_type,cutoff):
     #print NN_list[0][1]
     #a=id_orientation(NN_list[0][1])
     a=norm_12NNs(NN_list[0][1])
-    b=rotation_M_ref_001(a)  #rotation matrix ref to [100][010][001]
-    print b
+    b0=rotation_M_ref_001(a)  #rotation matrix ref to [100][010][001]
+    #b1=rotation_M_ref_111(a)  #rotation matrix ref to [0-11][-211][111]
+    print b0
+    print np.linalg.det(b0)
 
     return
 
