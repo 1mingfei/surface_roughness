@@ -26,7 +26,11 @@ def calc_dist(lst,n1,n2,H):
 
 def get_NN(cell,data,i,cutoff):
     lst=[]
+    position=[]
+    position.append(data[i,1:4])
     for j in range(len(data)):
         if (calc_dist(data,i,j,cell) <= cutoff) and (i<>j):
             lst.append(j)
-    return len(lst),lst
+            position.append(data[j,1:4])
+    position=np.asarray(position)
+    return lst,position
