@@ -11,6 +11,12 @@ def id_orientation(nn_list):
     data=np.asarray(data)
     return data
 
+def plane_normal(p1,p2,p3):
+    v1=p3-p1
+    v2=p2-p1
+    cross_prod=np.cross(v1,v2)
+    norm=np.linalg.norm(cross_prod)
+    return cross_prod/norm
 
 		
 def all_NNs(a,N_type,cutoff):
@@ -27,7 +33,9 @@ def all_NNs(a,N_type,cutoff):
     query_list=[0]
     NN_list = [pool.apply_async(get_NN.get_NN, args=(cell,data,i,cutoff)).get() for i in query_list]
     print NN_list[0]
-    print id_orientation(NN_list[0][1])
+    a=id_orientation(NN_list[0][1])
+    print a
+    print plane_normal(a[0],a[1],a[2])
 
     return
 
