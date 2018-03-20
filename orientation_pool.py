@@ -4,6 +4,22 @@ import get_NN
 import numpy as np
 import multiprocessing
 
+'''
+100 010 001 12 NNs
+[[ 0.         -0.70710678  0.70710678]
+ [ 0.          0.70710678  0.70710678]
+ [ 0.70710678  0.          0.70710678]
+ [-0.70710678  0.          0.70710678]
+ [ 0.70710678 -0.70710678  0.        ]
+ [-0.70710678 -0.70710678  0.        ]
+ [ 0.70710678  0.70710678  0.        ]
+ [-0.70710678  0.70710678  0.        ]
+ [ 0.         -0.70710678 -0.70710678]
+ [ 0.          0.70710678 -0.70710678]
+ [ 0.70710678  0.         -0.70710678]
+ [-0.70710678  0.         -0.70710678]]
+'''
+
 def id_orientation(nn_list):
     data=[x for x in nn_list if (x[2]>=nn_list[0][2])]
     data=sorted(data,key=lambda x:x[2],reverse=True)
@@ -18,6 +34,37 @@ def plane_normal(p1,p2,p3):
     norm=np.linalg.norm(cross_prod)
     return cross_prod/norm
 
+def norm_12NNs(nn_list):
+    if len(nn_list)<>13:
+        print "error while normailizing 12 NN vectors"
+    else:
+        data=[]
+        for i in range(1,13):
+            a=(nn_list[i]-nn_list[0])/np.linalg.norm(nn_list[i]-nn_list[0])
+            data.append(a)
+        data=sorted(data,key=lambda x:x[2],reverse=True)
+        data=np.asarray(data)
+    return data
+
+def rotation_M_ref_001(data):
+    ref=np.asarray(
+        [[ 0.        ,-0.70710678, 0.70710678],
+         [ 0.        , 0.70710678, 0.70710678],
+         [ 0.70710678, 0.        , 0.70710678],
+         [-0.70710678, 0.        , 0.70710678],
+         [ 0.70710678,-0.70710678, 0.        ],
+         [-0.70710678,-0.70710678, 0.        ],
+         [ 0.70710678, 0.70710678, 0.        ],
+         [-0.70710678, 0.70710678, 0.        ],
+         [ 0.        ,-0.70710678,-0.70710678],
+         [ 0.        , 0.70710678,-0.70710678],
+         [ 0.70710678, 0.        ,-0.70710678],
+         [-0.70710678, 0.        ,-0.70710678]]
+        )
+    print ref
+    print data
+    a=np.linalg.lstsq(ref,data)
+    return a[0]
 		
 def all_NNs(a,N_type,cutoff):
     aa=fx.info(a,'cfg',N_type)
@@ -32,10 +79,11 @@ def all_NNs(a,N_type,cutoff):
     pool = multiprocessing.Pool(processes=8)
     query_list=[0]
     NN_list = [pool.apply_async(get_NN.get_NN, args=(cell,data,i,cutoff)).get() for i in query_list]
-    print NN_list[0]
-    a=id_orientation(NN_list[0][1])
-    print a
-    print plane_normal(a[0],a[1],a[2])
+    #print NN_list[0][1]
+    #a=id_orientation(NN_list[0][1])
+    a=norm_12NNs(NN_list[0][1])
+    b=rotation_M_ref_001(a)  #rotation matrix ref to [100][010][001]
+    print b
 
     return
 
@@ -43,4 +91,5 @@ def all_NNs(a,N_type,cutoff):
 
 #all_NNs('example/dump.000001677.cfg',2,4.0)
 all_NNs('example/Ag_111.cfg',1,4.0)
+#all_NNs('example/Ag_001.cfg',1,4.0)
 
