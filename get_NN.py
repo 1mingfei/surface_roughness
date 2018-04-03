@@ -25,12 +25,19 @@ def calc_dist(lst,n1,n2,H):
     return np.sqrt(aa**2+bb**2+cc**2)
 
 def get_NN(cell,data,i,cutoff):
-    lst=[]
-    position=[]
-    position.append(data[i,1:4])
+    Flst=[]
+    Slst=[]
+    FNN=[]
+    SNN=[]
+    FNN.append(data[i,1:4])
+    SNN.append(data[i,1:4])
     for j in range(len(data)):
-        if (calc_dist(data,i,j,cell) <= cutoff) and (i<>j):
-            lst.append(j)
-            position.append(data[j,1:4])
-    position=np.asarray(position)
-    return lst,position
+        if (calc_dist(data,i,j,cell) <= cutoff[0]) and (i<>j):
+            Flst.append(j)
+            FNN.append(data[j,1:4])
+        if (calc_dist(data,i,j,cell) <= cutoff[1]) and (calc_dist(data,i,j,cell) > cutoff[0]):
+            Slst.append(j)
+            SNN.append(data[j,1:4])
+    FNN=np.asarray(FNN)
+    SNN=np.asarray(SNN)
+    return Flst,FNN,Slst,SNN
