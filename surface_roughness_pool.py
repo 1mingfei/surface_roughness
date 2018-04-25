@@ -3,8 +3,8 @@ import formatxfer as fx
 import numpy as np
 import multiprocessing
 from numpy import fft
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 
 def get_surf_atoms(cell,data,n_type,limits):
     tot_num=int(len(data))
@@ -14,16 +14,33 @@ def get_surf_atoms(cell,data,n_type,limits):
     else:
         return(l2[0])
 
-def surface_atoms_filter(a,N_type,N_space):
+def cutoff_surf_atoms(data,cutoffs):
+    tot_num=int(len(data))
+    l2 = [data[i] for i in range(tot_num) if data[i][3] > cutoffs[0] and  data[i][3] < cutoffs[1] and  data[i][0]==1.07868200e+02 ]
+    l2 = sorted(l2,key=lambda x:x[3],reverse=True)
+    if len(l2)==0: pass
+    else:
+        return(l2)
+
+def surface_atoms_filter(a,N_type,N_space,estimate):
     aa=fx.info(a,'cfg',N_type)
     cell=aa.cell
     data=aa.data     
     n_type=aa.atom_type_num
     tot_num=int(len(data))
+
+    data_new=cutoff_surf_atoms(data,estimate)
+    aa.data=np.asarray(data_new)
+    aa.tot_num=int(len(aa.data))
+    aa.atom_type_num=[n_type[1]]
+    aa.get_cfg_file_one('cutoff.cfg')
+
+
     xx, yy = np.meshgrid(np.linspace(0.0, 1.0, N_space-1),np.linspace(0.0, 1.0, N_space-1))
     M = np.array([[ x1, x1+1.0/float(N_space), x2, x2+1.0/float(N_space)] for x1, x2 in zip(np.ravel(xx), np.ravel(yy))])
     pool = multiprocessing.Pool(processes=8)
-    surface_atoms = [pool.apply_async(get_surf_atoms, args=(cell,data,n_type,M[i])).get() for i in range(len(M))]
+    surface_atoms = [pool.apply_async(get_surf_atoms, args=(cell,data_new,n_type,M[i])).get() for i in range(len(M))]
+    #surface_atoms = [pool.apply_async(get_surf_atoms, args=(cell,data,n_type,M[i])).get() for i in range(len(M))]
     surface_atoms=[x for x in surface_atoms if x is not None]
     surface_atoms=np.asarray(surface_atoms)
 
@@ -95,21 +112,21 @@ def surface_statistics(a,N_space):
     aa.get_cfg_file_one('sample.cfg')
     #-----done generate cfg--------------
     #Fk = fft.fft2(M)/N_space
-    Fk = fft.fft2(M)/N_space # Fourier coefficients (divided by n) nu = fft.fftfreq(n,dx) # Natural frequencies
-    Fk = fft.fftshift(Fk) # Shift zero freq to center
-    freqs = fft.fftfreq(N_space)
-    freqs = fft.fftshift(freqs)
-    #nu = fft.fftshift(nu) # Shift zero freq to center
-    psd2D = np.abs( Fk )**2
-    X, Y = np.meshgrid(freqs, freqs)
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    ax.contour3D(X, Y, psd2D, 50, cmap='binary')
-    fig.savefig('1.png')
+    #Fk = fft.fft2(M)/N_space # Fourier coefficients (divided by n) nu = fft.fftfreq(n,dx) # Natural frequencies
+    #Fk = fft.fftshift(Fk) # Shift zero freq to center
+    #freqs = fft.fftfreq(N_space)
+    #freqs = fft.fftshift(freqs)
+    ##nu = fft.fftshift(nu) # Shift zero freq to center
+    #psd2D = np.abs( Fk )**2
+    #X, Y = np.meshgrid(freqs, freqs)
+    #fig = plt.figure()
+    #ax = plt.axes(projection='3d')
+    #ax.contour3D(X, Y, psd2D, 50, cmap='binary')
+    #fig.savefig('1.png')
     return
 '''
 sampling the surface and statistics
 '''
-#N=50
-#surface_atoms_filter('example/dump.000001677.cfg',2,N)
-#surface_statistics('surf.dat',N)
+N=50
+surface_atoms_filter('example/dump.000001677.cfg',2,N,[0.6,1.0])
+surface_statistics('surf.dat',N)
