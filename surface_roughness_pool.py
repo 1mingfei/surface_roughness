@@ -38,7 +38,7 @@ def surface_atoms_filter(a,N_type,N_space,estimate):
 
     xx, yy = np.meshgrid(np.linspace(0.0, 1.0, N_space-1),np.linspace(0.0, 1.0, N_space-1))
     M = np.array([[ x1, x1+1.0/float(N_space), x2, x2+1.0/float(N_space)] for x1, x2 in zip(np.ravel(xx), np.ravel(yy))])
-    pool = multiprocessing.Pool(processes=8)
+    pool = multiprocessing.Pool(processes=4)
     surface_atoms = [pool.apply_async(get_surf_atoms, args=(cell,data_new,n_type,M[i])).get() for i in range(len(M))]
     #surface_atoms = [pool.apply_async(get_surf_atoms, args=(cell,data,n_type,M[i])).get() for i in range(len(M))]
     surface_atoms=[x for x in surface_atoms if x is not None]
@@ -47,6 +47,7 @@ def surface_atoms_filter(a,N_type,N_space,estimate):
     with open("surf.dat",'w') as fout:
         for i in range(3):
             fout.write("%12.8f   %12.8f   %12.8f\n"%(cell[i][0],cell[i][1],cell[i][2]))
+        fout.write("%12d\n"%(len(surface_atoms)))
         for i in range(len(surface_atoms)):
             fout.write("%12.8f   %12.8f   %12.8f   %12.8f\n"%(surface_atoms[i][0],surface_atoms[i][1],surface_atoms[i][2],surface_atoms[i][3]))
 
@@ -62,14 +63,15 @@ def surface_statistics(a,N_space):
     with open(a,'r') as fin:
         mylines=fin.readlines()
         cell=np.zeros((3,3))
-        data=np.zeros((len(mylines)-3,4))
+        tmp1=int(mylines[3].split()[0])
+        data=np.zeros((tmp1,4))
         for i in range(3):
             cell[i][0]=float(mylines[i].split()[0])
             cell[i][1]=float(mylines[i].split()[1])
             cell[i][2]=float(mylines[i].split()[2])
-        for i in range(len(mylines)-3):
+        for i in range(tmp1):
             for j in range(4):
-                data[i][j]=float(mylines[3+i].split()[j])
+                data[i][j]=float(mylines[4+i].split()[j])
 
     lowest_h=np.amin(data, axis=0)[3] 
     h_bar=np.mean(data[:,3])-lowest_h
